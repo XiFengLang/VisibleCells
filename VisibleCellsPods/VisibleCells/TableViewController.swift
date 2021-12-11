@@ -90,8 +90,10 @@ class TableViewController: UITableViewController {
             for row in (0..<tableView.numberOfRows(inSection: section)) {
                 let indexPath = IndexPath(row: row, section: section)
                 
-                // 这些Cell都是通过执行tableView(_:cellForRowAt:)代理方法复用/初始化并添加到TableView上的
-                // nil != tableView.indexPath(for: cell) 或 nil != tableView.cellForRow(at: indexPath)
+                /// 这些Cell`可能`是通过执行`tableView(_:cellForRowAt:)`代理方法复用并添加到TableView上的
+                /// 代理方法 `tableView(_:cellForRowAt:)` `可能`已经执行到对应的IndexPath，Cell数据已经更新
+                /// `nil != tableView.indexPath(for: cell) && nil != tableView.cellForRow(at: indexPath)`
+                ///
                 if nil != tableView.cellForRow(at: indexPath) {
                     mountedIndexPaths.append(indexPath)
                 }
@@ -102,12 +104,13 @@ class TableViewController: UITableViewController {
         let mountedCells = cells.filter { cell in
             let indexPath = tableView.indexPath(for: cell as! Cell)
             if cell.isHidden {
-                // iOS12/13/14，TableView上隐藏的Cell，都还没执行tableView(_:cellForRowAt:)代理方法复用
-                // 但是nil == tableView.indexPath(for: cell), 可通过Lookin插件看Cell.titleLabel.text
+                /// iOS12/13/14，TableView上隐藏的Cell，`tableView(_:cellForRowAt:)`都还没执行到对应的IndexPath
+                /// 即`nil != tableView.cellForRow(at: indexPath)`, 还可通过Lookin插件看Cell.titleLabel.text
                 
-                // iOS15 TableView上隐藏的Cell，可能已经执行tableView(_:cellForRowAt:)代理方法复用
-                // 即nil != tableView.indexPath(for: cell), 还可通过Lookin插件看Cell.titleLabel.text
-                // 之所以说“可能”，就有出现3个隐藏Cell，但是有2个已经走代理方法，1个没走代理方法
+                /// iOS15 TableView上隐藏的Cell，`可能``tableView(_:cellForRowAt:)`已经执行到对应的IndexPath
+                /// 即`nil != tableView.indexPath(for: cell) && nil != tableView.cellForRow(at: indexPath)`,
+                /// 还可通过Lookin插件看Cell.titleLabel.text
+                /// 之所以说“可能”，就有出现3个隐藏Cell，但是有2个已经走代理方法，1个没走代理方法
                 
                 print("Cell已添加到tableView上，isHidden(\(true))，at indexPath:\(indexPath as Any)")
             }
